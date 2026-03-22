@@ -1,0 +1,18 @@
+\begin{table}[t!]
+\centering
+\begin{tabular}{l c cccc}
+\midrule
+& & \multicolumn{4}{c}{Implementable Universe (\%)} \\
+\cmidrule(lr){3-6}
+Quintile & Training (\%) & \$100M & \$500M & \$1B & \$5B \\
+\midrule
+Q1 (Illiquid) & 20.0 & 11.1 & 8.3 & 7.0 & 4.4 \\
+Q2            & 20.0 & 18.7 & 17.6 & 16.8 & 13.8 \\
+Q3            & 20.0 & 21.5 & 21.9 & 21.8 & 20.7 \\
+Q4            & 20.0 & 23.6 & 25.1 & 25.8 & 27.8 \\
+Q5 (Liquid)   & 20.0 & 25.0 & 27.1 & 28.5 & 33.3 \\
+\midrule
+\end{tabular}
+\caption{\footnotesize \bf Training sample vs.\ implementable universe\normalfont. Each implementable column sums to 100\%. A stock is defined as implementable if its estimated one-way transaction cost is below 1\%, computed using the \citet{frazzini2018trading} model. Trade size assumes equal-weight positions across 20\% of the monthly cross-section. Liquidity quintiles are formed monthly on 21-day trailing average daily dollar volume. OOS period: January 2000--December 2024.}
+\label{tab:distribution_mismatch}
+\end{table}

@@ -1,0 +1,24 @@
+\begin{table}[t!]
+\centering
+\begin{tabular}{l cccc c ccc}
+\midrule
+& \multicolumn{4}{c}{Gross Sharpe Ratio} & & \multicolumn{3}{c}{Effect Decomposition} \\
+\cmidrule(lr){2-5} \cmidrule(lr){7-9}
+Model & 1A & 1B & 2A & 2B & & Training & Portfolio & Total \\
+\midrule
+\multicolumn{9}{l}{\it Panel A: Annualised Sharpe Ratios} \\[4pt]
+XGBoost       & 0.00 & 0.00 & 0.00 & 0.00 & & 0.00 & 0.00 & 0.00 \\
+Random Forest & 0.00 & 0.00 & 0.00 & 0.00 & & 0.00 & 0.00 & 0.00 \\
+Neural Network& 0.00 & 0.00 & 0.00 & 0.00 & & 0.00 & 0.00 & 0.00 \\[8pt]
+\multicolumn{9}{l}{\it Panel B: Hypothesis Tests} \\[4pt]
+& \multicolumn{4}{c}{H1: Training Share (\%)} & & \multicolumn{3}{c}{H3: Total Effect} \\
+\cmidrule(lr){2-5} \cmidrule(lr){7-9}
+& Share & $p$-val & & & & Effect & $p$-val & \\
+XGBoost       & 0.00 & 0.000 & & & & 0.000 & 0.000 & \\
+Random Forest & 0.00 & 0.000 & & & & 0.000 & 0.000 & \\
+Neural Network& 0.00 & 0.000 & & & & 0.000 & 0.000 & \\
+\midrule
+\end{tabular}
+\caption{\footnotesize \bf Main results: $2\times 2$ decomposition\normalfont. Panel~A reports annualised gross Sharpe ratios for each cell of the $2\times 2$ design and the effect decomposition (Equations~\ref{eq:training_effect}--\ref{eq:total_effect}). Panel~B reports hypothesis test results. H1 Training Share is the training effect as a percentage of the total effect. H3 Total Effect is the net Sharpe ratio improvement of cell 2B over cell 1A. $p$-values are from the Ledoit-Wolf (2008) studentised circular-block bootstrap with 5,000 replications. The OOS period is January 2000--December 2024.}
+\label{tab:main_results}
+\end{table}

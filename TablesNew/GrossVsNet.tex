@@ -1,0 +1,18 @@
+\begin{table}[t!]
+\centering
+\begin{tabular}{l c cccc cc}
+\midrule
+& & \multicolumn{4}{c}{Net Sharpe Ratio} & \multicolumn{2}{c}{Monthly (\%)} \\
+\cmidrule(lr){3-6} \cmidrule(lr){7-8}
+Quintile & Gross SR & \$100M & \$500M & \$1B & \$5B & Ret & TC$_{500\text{M}}$ \\
+\midrule
+Q1 (Illiquid) & $\mathbf{2.13}$ & $-0.04$ & $\mathbf{-1.68}$ & $-2.47$ & $-3.57$ & 3.86 & $\mathbf{7.03}$ \\
+Q2             & 1.51 & $\mathbf{0.57}$ & 0.10 & $-0.26$ & $-1.66$ & 2.78 & 2.61 \\
+Q3             & 1.15 & 0.46 & $\mathbf{0.25}$ & 0.09 & $-0.59$ & 1.94 & 1.53 \\
+Q4             & 0.71 & 0.16 & 0.07 & 0.00 & $-0.31$ & 1.05 & 0.95 \\
+Q5 (Liquid)    & 0.52 & 0.17 & 0.15 & $\mathbf{0.13}$ & $\mathbf{0.05}$ & 0.80 & 0.58 \\
+\midrule
+\end{tabular}
+\caption{\footnotesize \bf Gross vs.\ net Sharpe ratio by liquidity quintile\normalfont. Within-quintile decile long-short portfolios, equal-weighted. Gross SR is annualised and AUM-independent. Net SR is annualised at each AUM using the \citet{frazzini2018trading} transaction cost model. Ret and TC$_{500\text{M}}$ are monthly percentages at \$500M AUM. Bold entries highlight the best-performing quintile at each AUM level. ElasticNet with standard (unweighted) training. OOS period: January 2000--December 2024.}
+\label{tab:gross_vs_net}
+\end{table}

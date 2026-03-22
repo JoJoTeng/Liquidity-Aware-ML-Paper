@@ -1,0 +1,103 @@
+
+%% ============================================================
+%% preamble.tex — Shared math macros and theorem environments
+%% ============================================================
+
+\usepackage{bbm}
+\usepackage{makecell}
+\usepackage{listings}
+
+% --- Theorem environments ---
+\newtheorem{thm}{Theorem}
+\newtheorem{lem}[thm]{Lemma}
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{cor}[thm]{Corollary}
+\newtheorem{fact}[thm]{Fact}
+\newtheorem*{remark}{Remark}
+\newtheorem{example}[thm]{Example}
+\newtheorem{defn}[thm]{Definition}
+\newtheorem{assp}[thm]{Assumption}
+
+% --- Math operators ---
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{bm}
+
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+% --- Common symbols ---
+\newcommand{\Real}{\mathbb{R}}
+\newcommand{\Natural}{\mathbb{N}}
+\newcommand{\Var}{\mathrm{Var}}
+\newcommand{\Ex}{\mathbb{E}}
+\newcommand{\Prob}{\mathbb{P}}
+\newcommand{\eps}{\epsilon}
+\newcommand{\beps}{\bm{\epsilon}}
+\newcommand{\del}{\delta}
+\newcommand{\OLS}{\mathrm{OLS}}
+\newcommand{\Normal}{\mathcal{N}}
+\newcommand{\Cov}{\mathrm{Cov}}
+\newcommand{\tr}{\mathrm{tr}}
+\newcommand{\Ind}{\bm{1}}
+\newcommand{\boot}{\mathrm{boot}}
+\newcommand{\MSE}{\mathrm{MSE}}
+\newcommand{\SR}{\mathrm{SR}}
+
+% --- Highlight for revisions ---
+\newcommand{\updated}[1]{\textcolor{red}{#1}}
+
+% --- Calligraphic shortcuts ---
+\newcommand{\EA}{\mathcal{A}}
+\newcommand{\EB}{\mathcal{B}}
+\newcommand{\EC}{\mathcal{C}}
+\newcommand{\ED}{\mathcal{D}}
+\newcommand{\EF}{\mathcal{F}}
+\newcommand{\EG}{\mathcal{G}}
+\newcommand{\EH}{\mathcal{H}}
+\newcommand{\EL}{\mathcal{L}}
+\newcommand{\EM}{\mathcal{M}}
+\newcommand{\EN}{\mathcal{N}}
+\newcommand{\EO}{\mathcal{O}}
+\newcommand{\EP}{\mathcal{P}}
+\newcommand{\ER}{\mathcal{R}}
+\newcommand{\ES}{\mathcal{S}}
+\newcommand{\ET}{\mathcal{T}}
+\newcommand{\EU}{\mathcal{U}}
+\newcommand{\EX}{\mathcal{X}}
+\newcommand{\TC}{\mathrm{TC}}
+
+% --- Bold vector shortcuts ---
+\newcommand{\ba}{\bm{a}}
+\newcommand{\balpha}{\bm{\alpha}}
+\newcommand{\bb}{\bm{b}}
+\newcommand{\bp}{\bm{p}}
+\newcommand{\bx}{\bm{x}}
+\newcommand{\by}{\bm{y}}
+\newcommand{\bz}{\bm{z}}
+\newcommand{\be}{\bm{e}}
+\newcommand{\bw}{\bm{w}}
+\newcommand{\bv}{\bm{v}}
+\newcommand{\bmm}{\bm{m}}
+\newcommand{\bmu}{\bm{\mu}}
+\newcommand{\bbeta}{\bm{\beta}}
+\newcommand{\btheta}{\bm{\theta}}
+\newcommand{\hbtheta}{\hat{\bm{\theta}}}
+\newcommand{\htheta}{\hat{\theta}}
+\newcommand{\halpha}{\hat{\alpha}}
+\newcommand{\hbalpha}{\hat{\bm{\alpha}}}
+\newcommand{\blambda}{\bm{\lambda}}
+\newcommand{\bDelta}{\bm{\Delta}}
+\newcommand{\bLambda}{\bm{\Lambda}}
+\newcommand{\bI}{\bm{I}}
+\newcommand{\bX}{\bm{X}}
+\newcommand{\bY}{\bm{Y}}
+\newcommand{\br}{\bm{r}}
+\newcommand{\bone}{\bm{1}}
+\newcommand{\bzero}{\bm{0}}
+
+% --- Hypothesis testing ---
+\newcommand{\Hzero}{\mathcal{H}_0}
+\newcommand{\Hone}{\mathcal{H}_1}
+
+\allowdisplaybreaks

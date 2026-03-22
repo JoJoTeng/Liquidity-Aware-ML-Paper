@@ -1,0 +1,25 @@
+\begin{table}[t!]
+\centering
+\resizebox{\textwidth}{!}{
+\begin{tabular}{l cccc cccc cccc}
+\midrule
+& \multicolumn{4}{c}{CAPM $\alpha$} & \multicolumn{4}{c}{FF3 $\alpha$} & \multicolumn{4}{c}{FF5 $\alpha$} \\
+\cmidrule(lr){2-5} \cmidrule(lr){6-9} \cmidrule(lr){10-13}
+Cell & $\alpha$ & $t$ & $\alpha$ & $t$ & $\alpha$ & $t$ & $\alpha$ & $t$ & $\alpha$ & $t$ & $\alpha$ & $t$ \\
+\midrule
+\multicolumn{13}{l}{\it XGBoost} \\[4pt]
+1A (Baseline) & 0.00 & (0.00) & & & 0.00 & (0.00) & & & 0.00 & (0.00) & & \\
+1B            & 0.00 & (0.00) & & & 0.00 & (0.00) & & & 0.00 & (0.00) & & \\
+2A            & 0.00 & (0.00) & & & 0.00 & (0.00) & & & 0.00 & (0.00) & & \\
+2B (Combined) & 0.00 & (0.00) & & & 0.00 & (0.00) & & & 0.00 & (0.00) & & \\[8pt]
+\multicolumn{13}{l}{\it Random Forest} \\[4pt]
+1A (Baseline) & 0.00 & (0.00) & & & 0.00 & (0.00) & & & 0.00 & (0.00) & & \\
+1B            & 0.00 & (0.00) & & & 0.00 & (0.00) & & & 0.00 & (0.00) & & \\
+2A            & 0.00 & (0.00) & & & 0.00 & (0.00) & & & 0.00 & (0.00) & & \\
+2B (Combined) & 0.00 & (0.00) & & & 0.00 & (0.00) & & & 0.00 & (0.00) & & \\
+\midrule
+\end{tabular}
+}
+\caption{\footnotesize \bf Factor alphas\normalfont. This table reports monthly alphas (\%) from CAPM, Fama-French three-factor, and Fama-French five-factor regressions for each experimental cell. Newey-West $t$-statistics (6 lags) in parentheses. The OOS period is January 2000--December 2024.}
+\label{tab:factor_alphas}
+\end{table}

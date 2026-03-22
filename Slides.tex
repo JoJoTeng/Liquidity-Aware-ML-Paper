@@ -1,0 +1,232 @@
+\documentclass[10pt]{beamer}
+\setbeamercolor{background canvas}{bg=white}
+\usetheme[progressbar=frametitle,block=fill]{metropolis}
+
+\usepackage{amsmath,amssymb,booktabs,array,graphicx,tabularx,multirow}
+\usepackage{subcaption}
+\usepackage{natbib}
+\usepackage{tikz}
+\usetikzlibrary{positioning,fit,calc,arrows.meta,decorations.pathreplacing,backgrounds}
+\usepackage{xcolor,colortbl}
+
+\definecolor{darkblue}{RGB}{12,44,92}
+\definecolor{accent}{RGB}{153,0,0}
+\definecolor{tcblue}{RGB}{31,119,180}
+\definecolor{tcgreen}{RGB}{44,160,44}
+\definecolor{tcorange}{RGB}{255,127,14}
+\definecolor{softgray}{RGB}{240,242,245}
+
+\setbeamercolor{frametitle}{fg=darkblue,bg=white}
+\setbeamercolor{title}{fg=darkblue,bg=white}
+\setbeamercolor{progress bar}{fg=darkblue,bg=softgray}
+\setbeamercolor{alerted text}{fg=accent}
+\setbeamerfont{title}{series=\bfseries}
+\setbeamertemplate{navigation symbols}{}
+
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\SR}{\mathrm{SR}}
+\newcommand{\beaverarrow}{{\color{accent}$\hookrightarrow$\,}}
+\newcommand{\myfontsize}{\fontsize{8}{9.5}\selectfont}
+\newcommand{\backupbegin}{
+   \newcounter{framenumberappendix}
+   \setcounter{framenumberappendix}{\value{framenumber}}
+}
+\newcommand{\backupend}{
+   \addtocounter{framenumberappendix}{-\value{framenumber}}
+   \addtocounter{framenumber}{\value{framenumberappendix}}
+}
+
+\title{Liquidity-Aware Machine Learning\\for Stock Return Prediction}
+\author{Daniele Bianchi$^{\dagger}$ \and Teng Jiao$^{\dagger}$}
+\institute{Queen Mary University of London}
+\date{[Conference Name], [Year]}
+
+\begin{document}
+
+\maketitle
+
+%% ============================================================
+%% MOTIVATION
+%% ============================================================
+
+\begin{frame}{ML Predictions Work, But Can You Trade Them?}
+\begin{columns}[T]
+\column{0.65\textwidth}
+\textbf{The puzzle:}
+
+\vspace{0.5em}
+\begin{itemize}
+  \item[\beaverarrow] ML achieves OOS $R^2 \approx 0.4\%$--$0.5\%$ for stock returns (GKX 2020)
+  \item[\beaverarrow] But alpha concentrates in \textit{illiquid} stocks (Avramov et al.\ 2023)
+  \item[\beaverarrow] After transaction costs, much of the alpha disappears
+\end{itemize}
+
+\vspace{0.6em}
+\begin{block}{Our insight}
+The problem starts at \textbf{training}, not portfolio formation. Standard ML weights all stocks equally --- but errors on untradeable stocks are costless.
+\end{block}
+
+\column{0.3\textwidth}
+% Optional: small figure showing gross vs net SR
+\end{columns}
+\end{frame}
+
+
+\begin{frame}{This Paper}
+\textbf{Research question:} Does incorporating liquidity into ML \textit{training} improve implementable returns?
+
+\vspace{1em}
+\textbf{What we do:}
+\begin{enumerate}
+  \item Develop implementability-weighted training (cost-sensitive learning $\rightarrow$ asset pricing)
+  \item Clean $2\times 2$ design separating training vs.\ portfolio effects
+  \item Test across 3 ML models: XGBoost, Random Forest, Neural Network
+\end{enumerate}
+
+\vspace{1em}
+\textbf{Key findings:}
+\begin{itemize}
+  \item[\beaverarrow] Training effect is \textbf{model-dependent}: helps XGBoost ($\Delta$SR $= +0.24$, $p = 0.033$), not RF
+  \item[\beaverarrow] Mechanism: feature reallocation from illiquidity $\rightarrow$ tradable factors ($t = 4.55$)
+  \item[\beaverarrow] Sequential boosting is vulnerable to implementability imbalance; bagging is not
+\end{itemize}
+\end{frame}
+
+
+%% ============================================================
+%% THE PROBLEM
+%% ============================================================
+
+\begin{frame}{The Implementability Imbalance}
+\myfontsize
+\begin{table}
+\centering
+\begin{tabular}{l ccccc}
+\toprule
+Quintile & Training & \$100M & \$500M & \$1B & \$5B \\
+\midrule
+Q1 (Illiquid) & 20\% & 11\% & 8\% & 7\% & 4\% \\
+Q2 & 20\% & 19\% & 18\% & 17\% & 14\% \\
+Q3 & 20\% & 22\% & 22\% & 22\% & 21\% \\
+Q4 & 20\% & 24\% & 25\% & 26\% & 28\% \\
+Q5 (Liquid) & 20\% & 25\% & 27\% & 29\% & 33\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\vspace{0.5em}
+The model trains on a \textbf{uniform distribution} but must trade a \textbf{liquid-skewed} universe.
+
+At \$500M: Q4--Q5 = 52\% of implementable stocks but only 40\% of training gradient.
+\end{frame}
+
+
+%% ============================================================
+%% THE $2\times 2$ DESIGN
+%% ============================================================
+
+\begin{frame}{The $2\times 2$ Identification Strategy}
+\begin{table}
+\centering
+\begin{tabular}{l cc}
+\toprule
+ & EW Portfolio & Liq-Weighted Portfolio \\
+\midrule
+Standard Training & \textbf{1A} (Baseline) & 1B \\
+Weighted Training & 2A & \textbf{2B} (Combined) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\vspace{1em}
+\textbf{Effect decomposition:}
+\begin{align*}
+\text{Training Effect} &= \SR(2A) - \SR(1A) \\
+\text{Portfolio Effect} &= \SR(1B) - \SR(1A) \\
+\text{Total Effect} &= \SR(2B) - \SR(1A)
+\end{align*}
+
+If Training Effect $>$ Portfolio Effect $\Rightarrow$ \textit{how} you train matters more than \textit{how} you form portfolios.
+\end{frame}
+
+
+%% ============================================================
+%% RESULTS
+%% ============================================================
+
+\begin{frame}{Main Results}
+% \begin{figure}
+% \centering
+% \includegraphics[width=0.85\textwidth]{FiguresNew/effect_decomposition.png}
+% \caption{Effect decomposition: Training vs.\ Portfolio effects by model}
+% \end{figure}
+
+\vspace{1em}
+\textbf{XGBoost:} Training effect = $+0.242$, $p = 0.033$ (exceeds $\geq 0.20$ target)
+
+\textbf{Random Forest:} Training effect = $-0.12$ (weighted training \textit{hurts})
+
+\vspace{1em}
+\begin{block}{Model dependence}
+Sequential boosting (XGBoost) concentrates on illiquidity patterns $\rightarrow$ reallocation helps.\\
+Bagging (RF) already diversifies $\rightarrow$ reallocation is redundant.
+\end{block}
+\end{frame}
+
+
+\begin{frame}{Feature Reallocation (H2)}
+% \begin{figure}
+% \centering
+% \includegraphics[width=0.85\textwidth]{FiguresNew/importance_comparison_xgboost.png}
+% \end{figure}
+
+\vspace{1em}
+\textbf{XGBoost H2:} $t = 4.55$, $p < 0.001$ --- our strongest result.
+
+Weighted training shifts SHAP importance: \\
+\quad $\downarrow$ IdioVol, zero-trading days, MaxRet \\
+\quad $\uparrow$ Mom12m, profitability, value
+\end{frame}
+
+
+%% ============================================================
+%% CONCLUSION
+%% ============================================================
+
+\begin{frame}{Conclusion}
+\begin{enumerate}
+  \item Training-stage liquidity weighting can significantly improve implementable Sharpe ratios --- but \textbf{only for architectures vulnerable to implementability imbalance}
+  \item The mechanism is feature reallocation: from illiquidity proxies to tradable factors
+  \item Model architecture is a first-order consideration for cost-sensitive training
+  \item Complements Jensen et al.\ (2024) [portfolio side] and Bianchi et al.\ (2026) [SDF side]
+\end{enumerate}
+\end{frame}
+
+
+%% ============================================================
+%% BACKUP
+%% ============================================================
+
+\backupbegin
+
+\begin{frame}{Backup: Weighting Scheme}
+The primary scheme is softmax on dollar volume rank:
+$$w_i = \frac{\exp(\lambda \cdot \text{percentile}_i)}{\sum_j \exp(\lambda \cdot \text{percentile}_j)}, \quad \lambda = 2.0$$
+
+Normalised to mean $= 1.0$ within each cross-section. All ML models accept \texttt{sample\_weight} natively.
+\end{frame}
+
+\begin{frame}{Backup: Transaction Cost Model}
+Frazzini, Israel, and Moskowitz (2018):
+$$\text{TC}_i = \frac{S_i}{2} + 0.1 \cdot \sigma_i \cdot \sqrt{\frac{Q_i}{\text{ADV}_i}}$$
+
+\begin{itemize}
+  \item Corwin-Schultz spreads $\times 0.30$ (institutional effective spread)
+  \item Spread cap at 5\%
+  \item AUM scenarios: \$100M, \$500M, \$1B, \$5B
+\end{itemize}
+\end{frame}
+
+\backupend
+
+\end{document}

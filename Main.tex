@@ -1,0 +1,564 @@
+\documentclass[a4paper,12pt,final]{article}
+
+%% ============================================================
+%% Package Setup
+%% ============================================================
+
+\usepackage{tikz}
+\usetikzlibrary{decorations.pathreplacing,positioning,arrows.meta}
+\usepackage{morefloats}
+\usepackage{subfigure}
+\usepackage{subcaption}
+\usepackage{ctable}
+\usepackage{colortbl}
+\usepackage{longtable}
+\usepackage{rotating}
+\usepackage[english]{babel}
+\usepackage[all,color]{xy}
+\usepackage{ragged2e}
+\usepackage{ifpdf}
+\usepackage{color}
+\usepackage{bbm}
+\usepackage{parskip}
+\usepackage{afterpage}
+\usepackage{booktabs}
+\usepackage{multicol}
+\usepackage{multirow}
+\usepackage{xparse}
+\usepackage{xcolor}
+\usepackage{color,soul}
+\usepackage{pdflscape}
+\usepackage{graphicx}
+\usepackage{wrapfig}
+\usepackage{lscape}
+\usepackage{epstopdf}
+
+\usepackage{setspace,graphicx,amsmath,amsfonts,amssymb,amsthm}
+\usepackage{marginnote,enumitem,subfigure,rotating,fancyvrb}
+\usepackage{float}
+\usepackage[longnamesfirst]{natbib}
+
+%% ============================================================
+%% Colors and Hyperlinks
+%% ============================================================
+
+\definecolor{NewBlue}{RGB}{001,031,091}
+\definecolor{NewRed}{RGB}{153,0,0}
+\definecolor{grayurl}{rgb}{0.5,0.5,0.5}
+
+\usepackage[plainpages=false,breaklinks=true,bookmarks=true,bookmarksopen=true,%
+                                       bookmarksopenlevel=1,pdfstartview=FitH,pdfview=FitH]{hyperref}
+\hypersetup{
+	pdfborder = {0 0 0},
+    colorlinks,
+    citecolor=NewRed,
+    filecolor=NewRed,
+    linkcolor=NewRed,
+    urlcolor=grayurl
+}
+
+%% ============================================================
+%% Page Geometry
+%% ============================================================
+
+\usepackage[lmargin=1.0in, rmargin=1.0in, tmargin=1in, bmargin=1in, paperwidth=220mm, paperheight=290mm]{geometry}
+
+%% ============================================================
+%% Preamble
+%% ============================================================
+
+\input{preamble}
+
+%% ============================================================
+%% Section Formatting
+%% ============================================================
+
+\usepackage{titlesec}
+\newcommand{\periodafter}[1]{#1.}
+\titleformat{\paragraph}[runin]
+{\normalfont\bfseries}{\thesubsubsection}{1em}{\periodafter}
+
+\newcommand{\jcorrect}[1]{#1}
+
+\setcounter{tocdepth}{2}
+
+\newcommand{\sign}{\mathop{\rm sign}}
+\newcommand{\defeq}{\stackrel{\rm def}{=}}
+\newcommand{\sym}[1]{#1}
+
+\newtheorem{condition}{Condition}
+\newtheorem{corollary}{Corollary}
+\newtheorem{proposition}{Proposition}
+\newtheorem{obs}{Observation}
+\newtheorem{hypothesis}{Hypothesis}
+
+
+%% ============================================================
+%% DOCUMENT BEGINS
+%% ============================================================
+\begin{document}
+
+\setlist{noitemsep}
+
+%% --- Title and Abstract ---
+\newcommand{\tit}{\huge\vspace{1em}Liquidity-Aware Machine Learning\\for Stock Return Prediction\vspace{2em}}
+\newcommand{\abs}{Machine learning methods achieve impressive out-of-sample predictive accuracy for stock returns, yet portfolio strategies derived from these predictions often disappoint after transaction costs. We argue that this gap originates at the model training stage: standard ML training weights all stocks equally, devoting substantial capacity to illiquid securities that cannot be profitably traded. Drawing on cost-sensitive learning theory, we develop implementability-weighted training that incorporates stock liquidity directly into the loss function. Using a $2\times 2$ experimental design that separately identifies training and portfolio formation effects across three ML models (XGBoost, Random Forest, Neural Network), we find that the training effect is model-dependent. For XGBoost, liquidity-weighted training significantly improves the net Sharpe ratio by 0.24 at \$500M AUM ($p=0.033$), with the mechanism operating through feature reallocation away from illiquidity proxies toward tradable characteristics ($t=4.55$, $p<0.001$). Random Forest, whose bagging-based architecture already diversifies across feature subsets, shows no benefit from weighted training. Our results demonstrate that \emph{how} models are trained matters at least as much as \emph{how} portfolios are formed---but the effectiveness depends critically on model architecture.
+\vspace{0.1in}
+
+\textbf{Keywords:} Machine learning, Stock return prediction, Transaction costs, Liquidity, Cost-sensitive learning, Portfolio construction.\\
+\\
+\textbf{JEL codes:} G11, G12, G14, C45, C58}
+
+\title{\vspace{-2em}{\bf \tit}\thanks{\footnotesize This version: \today. We gratefully acknowledge computational resources provided by the Apocrita HPC facility at Queen Mary University of London.}}
+
+\author{
+  \begin{tabular}{@{}c@{\hspace{1.5cm}}c@{}}
+    Daniele Bianchi & Teng Jiao \\
+    \small Queen Mary, & \small Queen Mary, \\
+    \small University of London & \small University of London \\
+    \small \href{mailto:d.bianchi@qmul.ac.uk}{\texttt{\color{grayurl}d.bianchi@qmul.ac.uk}} & \small \href{mailto:t.jiao@qmul.ac.uk}{\texttt{\color{grayurl}t.jiao@qmul.ac.uk}}
+  \end{tabular}
+}
+
+\date{\hspace{2em}}
+
+\maketitle
+
+\vspace*{0.1in}
+\centerline{\bf Abstract}
+\medskip
+\abs
+\normalsize
+\setlength{\parskip}{.2cm}
+\setlength{\parindent}{0.55cm}
+
+\doublespacing
+
+\clearpage
+
+
+%% ============================================================
+%% 1. INTRODUCTION
+%% ============================================================
+\section{Introduction}
+\label{sec:introduction}
+
+Machine learning methods have transformed empirical asset pricing research. \citet{gu2020empirical} demonstrate that ML techniques achieve monthly out-of-sample $R^2$ values of 0.4--0.5\% for individual stock returns---economically meaningful given the difficulty of return prediction. Subsequent work has refined these methods and documented their robustness across markets and time periods \citep{kelly2019characteristics,chen2022open}.
+
+Yet a puzzle remains. Despite strong academic evidence, practitioners report that ML-based strategies often underperform expectations after accounting for real-world implementation constraints. \citet{avramov2023machine} show that standard ML methods disproportionately exploit predictability in illiquid stocks---securities that cannot be traded profitably at scale. When transaction costs and capacity constraints are imposed, much of the apparent alpha disappears. \citet{theis2024model} document similar findings at the factor level, showing that the ranking of asset pricing models changes dramatically once trading frictions are incorporated.
+
+This paper proposes a novel explanation and solution. We argue that the problem originates not at the portfolio formation stage, where most existing solutions focus, but at the model training stage. Standard ML training minimizes prediction error equally across all stocks, treating a prediction error on an illiquid microcap identically to an error on a liquid large-cap. This is statistically natural but economically misguided: errors on untradeable stocks are costless from an investment perspective, while errors on tradeable stocks directly affect portfolio returns.
+
+We develop a framework for implementability-weighted training grounded in cost-sensitive learning theory \citep{elkan2001foundations}. Rather than treating implementability as a post-estimation filter, we incorporate it directly into the ML objective function. The key insight is that implementability imbalance---the mismatch between training sample composition and investable universe---differs fundamentally from the class imbalance problem studied in computer science. Class imbalance involves numerical rarity of outcomes; implementability imbalance involves heterogeneity in the \emph{economic value} of observations.
+
+Our empirical design separately identifies the effects of training modifications versus portfolio formation modifications using a $2\times 2$ framework. We compare: (i) standard training with standard portfolios (baseline); (ii) standard training with liquidity-weighted portfolios (portfolio effect only); (iii) liquidity-weighted training with standard portfolios (training effect only); and (iv) liquidity-weighted training with liquidity-weighted portfolios (combined). This decomposition allows us to test our central hypothesis: that training-time decisions contribute more to implementable performance than portfolio-formation decisions.
+
+We implement this framework across three ML architectures---XGBoost, Random Forest, and Neural Network---using 75 stock-level predictors from the \citet{chen2022open} dataset merged with CRSP monthly returns. Liquidity weights are computed via a softmax-on-rank scheme that smoothly upweights liquid stocks without discarding illiquid observations entirely. The out-of-sample evaluation period spans January 2000 through December 2024, with rolling 120-month training windows and monthly rebalancing.
+
+Our central finding is that the effectiveness of liquidity-weighted training is \emph{model-dependent}. For XGBoost, weighted training significantly improves the net Sharpe ratio by 0.24 at \$500M AUM (Ledoit-Wolf bootstrap $p=0.033$), exceeding our pre-specified threshold of 0.20. The mechanism operates through feature reallocation: weighted training shifts SHAP importance away from illiquidity-related characteristics (idiosyncratic volatility, zero-trading days) toward tradable factors (momentum, profitability), with a $t$-statistic of 4.55 ($p<0.001$). However, Random Forest---whose bagging-based architecture already diversifies across feature subsets---shows no benefit and even slight deterioration from weighted training.
+
+This model dependence has a natural explanation. XGBoost builds trees sequentially, with each tree correcting the previous one's residuals. If early trees focus on illiquidity patterns (which reduce MSE efficiently because illiquid stocks are more predictable), later trees inherit this focus. Weighted training breaks this sequential reinforcement. Random Forest, by contrast, trains each tree on a different bootstrap sample with random feature subsets, providing built-in diversification that makes the additional reallocation from liquidity weighting redundant.
+
+Our work complements \citet{jensen2024machine}, who develop optimal portfolio construction given ML predictions, and \citet{bianchi2026transaction}, who embed transaction costs into the stochastic discount factor. While these papers address implementability at the portfolio formation or pricing kernel level, we show that the training stage offers a distinct and powerful margin for improvement---at least for certain model architectures.
+
+The remainder of the paper proceeds as follows. Section~\ref{sec:problem} documents the implementability imbalance problem. Section~\ref{sec:framework} develops the theoretical framework. Section~\ref{sec:design} describes the empirical design. Section~\ref{sec:data} presents the data. Section~\ref{sec:results} reports the main empirical results. Section~\ref{sec:robustness} provides robustness checks. Section~\ref{sec:conclusion} concludes.
+
+
+%% ============================================================
+%% 2. THE IMPLEMENTABILITY IMBALANCE
+%% ============================================================
+\section{The Implementability Imbalance}
+\label{sec:problem}
+
+Standard machine learning models for stock return prediction optimise a loss function that weights all stocks equally. This section documents three empirical facts that reveal a fundamental misalignment between this training objective and the implementable investment universe. We show that (i) the training sample overrepresents untradeable stocks, (ii) the model predicts best where it matters least, and (iii) the resulting gross alpha is entirely destroyed by transaction costs. These findings motivate the implementability-weighted training framework developed in Section~\ref{sec:framework}.
+
+All results in this section use an ElasticNet model \citep{zou2005regularization} as the linear benchmark. The out-of-sample (OOS) period spans January 2000 through December 2024 (299 monthly cross-sections). Liquidity quintiles are formed monthly on 21-day trailing average daily dollar volume.
+
+\subsection{The Distribution Mismatch}
+\label{subsec:mismatch}
+
+Under standard training, each liquidity quintile contributes 20\% of training observations by construction. However, the fraction of stocks that an investor can profitably trade depends on fund size. We define a stock as \emph{implementable} at a given AUM if its estimated one-way transaction cost, computed using the \citet{frazzini2018trading} model, is below 1\%.
+
+\input{TablesNew/DistributionMismatch}
+
+Table~\ref{tab:distribution_mismatch} reveals that the training distribution overrepresents illiquid stocks relative to the implementable universe. At our primary AUM of \$500M, the two most liquid quintiles (Q4--Q5) account for 52.2\% of implementable stocks but receive only 40\% of the training gradient. This mismatch intensifies with fund size: at \$5B, Q5 alone accounts for 33.3\% of implementable stocks while receiving only 20\% of training attention. The market impact component of transaction costs scales with $\sqrt{Q/\text{ADV}}$, disproportionately penalising illiquid stocks as trade sizes grow.
+
+\subsection{Prediction Accuracy by Liquidity}
+\label{subsec:prediction_accuracy}
+
+We evaluate the standard model's out-of-sample prediction accuracy within each liquidity quintile using the zero-benchmark $R^2$ of \citet{gu2020empirical}:
+\begin{equation}
+R^2_{\text{OOS}} = 1 - \frac{\sum_{(i,t) \in \text{OOS}} (r_{i,t+1} - \hat{r}_{i,t+1})^2}{\sum_{(i,t) \in \text{OOS}} r_{i,t+1}^2}
+\label{eq:oos_r2}
+\end{equation}
+
+\input{TablesNew/R2ByQuintile}
+
+Table~\ref{tab:r2_by_quintile} demonstrates a monotonic decline in prediction quality from the most illiquid to the most liquid quintile. For the two most implementable quintiles (Q4--Q5), $R^2$ is negative: the model performs \emph{worse} than predicting zero. The pooled $R^2$ of $+0.15\%$ is comparable to the pooled results reported by \citet{gu2020empirical} for ElasticNet, yet it masks the failure in liquid stocks entirely, as it is dominated by illiquid stocks that constitute a diminishing share of the implementable universe.
+
+\subsection{The Implementability Gap}
+\label{subsec:implementability_gap}
+
+We form within-quintile decile long-short portfolios using the standard model's predictions and compute both gross and net Sharpe ratios across multiple AUM scenarios.
+
+\input{TablesNew/GrossVsNet}
+
+The gross and net Sharpe ratios form a ``scissors'' pattern (Table~\ref{tab:gross_vs_net}). Gross SR declines monotonically from 2.13 (Q1) to 0.52 (Q5), confirming that the model's predictive signal is strongest among illiquid stocks. However, after transaction costs, the picture inverts. At \$500M, Q1's monthly gross return of 3.86\% is overwhelmed by 7.03\% monthly transaction costs, producing a net SR of $-1.68$. The optimal quintile shifts rightward with fund size: Q2 at \$100M, Q3 at \$500M, and only Q5 at \$5B. At \$5B, Q5 is the sole quintile with positive net performance (SR~$= 0.05$)---yet it receives only 20\% of the training gradient.
+
+% Figure~\ref{fig:gross_vs_net} plots gross and net Sharpe ratios by quintile.
+% \begin{figure}[t!]
+% \centering
+% \includegraphics[width=0.85\textwidth]{FiguresNew/gross_vs_net_sr.png}
+% \caption{\footnotesize \bf Gross vs.\ net Sharpe ratio by liquidity quintile\normalfont. Solid line shows gross SR (AUM-independent). Dashed lines show net SR at four AUM levels. Within-quintile decile long-short portfolios, ElasticNet, OOS 2000--2024.}
+% \label{fig:gross_vs_net}
+% \end{figure}
+
+\subsection{Connecting the Evidence}
+\label{subsec:connecting}
+
+The three pieces of evidence form a logical chain. Table~\ref{tab:distribution_mismatch} establishes that 40\% of the training gradient is directed at Q1--Q2 stocks, which contribute only 26\% of the implementable universe at \$500M. Table~\ref{tab:r2_by_quintile} shows that this misallocated capacity produces the model's best predictions in precisely the quintiles that cannot be traded: $R^2$ is positive only for Q1--Q3. Table~\ref{tab:gross_vs_net} completes the argument by demonstrating that even Q1's impressive gross alpha of 3.86\% per month is entirely consumed by transaction costs.
+
+Pooled OOS $R^2$ and gross Sharpe ratios are the headline metrics frequently reported in the academic literature. Our quintile decomposition reveals that both are misleading: pooled $R^2$ is driven by illiquid stocks that no institutional investor can profitably trade, and gross Sharpe ratios ignore the transaction costs that destroy alpha in precisely those quintiles where the model predicts best. The standard ML training pipeline optimises for the wrong objective.
+
+\subsection{Preview: Implementability-Weighted Training}
+\label{subsec:preview}
+
+The preceding evidence motivates a natural remedy: reweight the training loss to allocate more capacity to implementable stocks. We preview this approach using a softmax rank weighting scheme, which assigns weights proportional to $\exp(\lambda \cdot \text{percentile}_i)$ where $\text{percentile}_i$ is the stock's dollar volume rank and $\lambda = 2.0$ controls the contrast. Higher-ranked (more liquid) stocks receive greater weight in the loss function, steering the model toward implementable stocks without discarding illiquid observations entirely.
+
+\input{TablesNew/R2Weighted}
+
+Table~\ref{tab:r2_weighted} demonstrates the capacity reallocation mechanism. Under weighted training, $R^2$ decreases by 0.12 percentage points for Q1 (the model devotes less attention to illiquid-stock patterns) and increases by 0.03--0.09 percentage points for Q3--Q5 (capacity is redirected toward implementable stocks). The largest improvement occurs in Q4 ($+0.091$ pp), which moves from $-0.14\%$ to $-0.05\%$---still negative, but substantially less so. These improvements are achieved with a simple linear model; we expect larger effects for the nonlinear models deployed in the main experiment (Section~\ref{sec:results}).
+
+% Figure: R² bars standard vs weighted
+% \begin{figure}[t!]
+% \centering
+% \includegraphics[width=0.85\textwidth]{FiguresNew/r2_standard_vs_weighted.png}
+% \caption{\footnotesize \bf OOS $R^2$ under standard vs.\ weighted training\normalfont. Blue bars show standard training $R^2$; orange bars show weighted training $R^2$ (softmax $\lambda = 2.0$). The capacity reallocation is visible: Q1 decreases, Q3--Q5 increase.}
+% \label{fig:r2_weighted}
+% \end{figure}
+
+\input{TablesNew/NetSRWeighted}
+
+The net Sharpe ratio improvements concentrate in Q3 ($+0.15$; Table~\ref{tab:net_sr_weighted}), the ``sweet spot'' quintile where stocks are liquid enough to trade but still predictable enough to generate alpha. The improvement is robust across AUM levels, ranging from $+0.17$ at \$100M to $+0.11$ at \$5B. However, the aggressive capacity reallocation of softmax weighting reduces performance in Q2 and Q5, illustrating the trade-off between concentration and breadth. Milder weighting schemes (e.g., spread-based) produce smaller but more uniform improvements across all implementable quintiles. The choice of weighting scheme is examined in the robustness analysis (Section~\ref{sec:robustness}).
+
+\subsection{Summary}
+\label{subsec:motivation_summary}
+
+The evidence in this section establishes three facts about standard ML return prediction. First, the training distribution is misaligned with the implementable universe---at \$500M, 40\% of training observations come from stocks that contribute only 26\% of implementable capacity. Second, the model's predictive power concentrates in the wrong place---OOS $R^2$ is positive only for the three least liquid quintiles. Third, gross alpha is illusory---the most predictable quintile (Q1, gross SR~$= 2.13$) produces deeply negative net returns at any institutional AUM.
+
+A preview of implementability-weighted training demonstrates that even a simple linear model can partially correct this misallocation: $R^2$ shifts from illiquid to liquid quintiles, and net Sharpe ratios improve in the implementable region. These findings motivate the framework developed in Section~\ref{sec:framework}, which combines weighted training with liquidity-adjusted portfolio construction and tests their individual and joint contributions across three ML architectures.
+
+
+%% ============================================================
+%% 3. THEORETICAL FRAMEWORK
+%% ============================================================
+\section{Theoretical Framework}
+\label{sec:framework}
+
+\subsection{Cost-Sensitive Learning for Asset Pricing}
+\label{subsec:cost_sensitive}
+
+Cost-sensitive learning \citep{elkan2001foundations} addresses settings where different types of errors have different costs. The standard formulation considers classification with asymmetric misclassification costs. We adapt this framework to regression with heterogeneous observation utility.
+
+Consider the standard ML objective:
+\begin{equation}
+\EL_{\text{standard}}(\btheta) = \frac{1}{NT}\sum_{i=1}^{N}\sum_{t=1}^{T} \left(r_{i,t+1} - f(\bx_{i,t}; \btheta)\right)^2
+\label{eq:standard_loss}
+\end{equation}
+where $r_{i,t+1}$ is the excess return of stock $i$ in month $t+1$, $\bx_{i,t}$ is the vector of predictive characteristics, $f(\cdot;\btheta)$ is the ML model with parameters $\btheta$, and the sum runs over all $N$ stocks and $T$ time periods. Equation~\eqref{eq:standard_loss} assigns equal weight to every stock-month observation.
+
+We propose the implementability-weighted loss:
+\begin{equation}
+\EL_{\text{weighted}}(\btheta) = \frac{\sum_{i=1}^{N} w_{i,t} \cdot \left(r_{i,t+1} - f(\bx_{i,t}; \btheta)\right)^2}{\sum_{i=1}^{N} w_{i,t}}
+\label{eq:weighted_loss}
+\end{equation}
+where $w_{i,t} \geq 0$ are stock-level implementability weights, normalised to have mean one within each cross-section. The normalisation ensures that the weighted loss has the same scale as the standard loss, preventing the regularisation terms from being over- or under-penalised.
+
+\subsection{Weighting Schemes}
+\label{subsec:weighting_schemes}
+
+We implement four weighting schemes to ensure robustness, all normalised to mean one within each cross-section.
+
+\paragraph{Scheme A: Softmax on Rank (Primary).}
+\begin{equation}
+w_i = \frac{\exp(\lambda \cdot \text{percentile}_i)}{\sum_{j} \exp(\lambda \cdot \text{percentile}_j)}
+\label{eq:softmax_rank}
+\end{equation}
+where $\text{percentile}_i \in [0,1]$ is the cross-sectional dollar volume rank of stock $i$ and $\lambda = 2.0$ controls the contrast. This provides smooth weights without discrete jumps.
+
+\paragraph{Scheme B: Linear Dollar Volume.}
+\begin{equation}
+w_i = \frac{\text{DolVol}_i}{\overline{\text{DolVol}}}
+\label{eq:linear_dolvol}
+\end{equation}
+
+\paragraph{Scheme C: Transaction Cost-Based.}
+\begin{equation}
+w_i = \frac{1}{1 + \text{Spread}_i}
+\label{eq:tc_based}
+\end{equation}
+
+\paragraph{Scheme D: Quintile Discrete.}
+Fixed weights by liquidity quintile: $w \in \{0.1, 0.3, 1.0, 3.0, 5.0\}$ for Q1 through Q5.
+
+\subsection{Testable Predictions}
+\label{subsec:predictions}
+
+The implementability-weighted framework generates four testable predictions:
+
+\begin{hypothesis}[Training Dominance]
+\label{hyp:h1}
+The training effect exceeds the portfolio effect:
+\begin{equation}
+\left[\SR(2A) - \SR(1A)\right] > \left[\SR(1B) - \SR(1A)\right]
+\label{eq:h1}
+\end{equation}
+\end{hypothesis}
+
+\begin{hypothesis}[Feature Reallocation]
+\label{hyp:h2}
+Weighted training shifts feature importance from illiquidity-related characteristics to tradable factors, as measured by mean absolute SHAP values across rolling windows.
+\end{hypothesis}
+
+\begin{hypothesis}[Sharpe Improvement]
+\label{hyp:h3}
+The combined approach achieves a meaningfully higher net Sharpe ratio:
+\begin{equation}
+\SR(2B) - \SR(1A) \geq 0.20 \quad \text{(annualised)}
+\label{eq:h3}
+\end{equation}
+\end{hypothesis}
+
+\begin{hypothesis}[Capacity Improvement]
+\label{hyp:h4}
+The break-even AUM of the combined approach (2B) substantially exceeds that of the baseline (1A).
+\end{hypothesis}
+
+
+%% ============================================================
+%% 4. EMPIRICAL DESIGN
+%% ============================================================
+\section{Empirical Design}
+\label{sec:design}
+
+\subsection{The $2 \times 2$ Framework}
+\label{subsec:two_by_two}
+
+Our identification strategy relies on a $2 \times 2$ factorial design that crosses the training dimension (standard vs.\ liquidity-weighted) with the portfolio dimension (equal-weight vs.\ liquidity-weighted). Table~\ref{tab:two_by_two} summarises the four experimental cells.
+
+\begin{table}[t!]
+\centering
+\begin{tabular}{l cc}
+\midrule
+ & Standard Portfolio (EW) & Liquidity-Weighted Portfolio \\
+\midrule
+Standard Training & 1A (Baseline) & 1B \\
+Liquidity-Weighted Training & 2A & 2B (Combined) \\
+\midrule
+\end{tabular}
+\caption{\footnotesize \bf $2\times 2$ experimental design\normalfont. Each cell represents a distinct training--portfolio combination. The training dimension modifies the loss function weights; the portfolio dimension modifies the within-decile stock weights at portfolio formation. Cell 1A serves as the baseline against which all effects are measured.}
+\label{tab:two_by_two}
+\end{table}
+
+The key comparisons are:
+\begin{align}
+\text{Training Effect} &= \SR(2A) - \SR(1A) \label{eq:training_effect} \\
+\text{Portfolio Effect} &= \SR(1B) - \SR(1A) \label{eq:portfolio_effect} \\
+\text{Total Effect} &= \SR(2B) - \SR(1A) \label{eq:total_effect} \\
+\text{Interaction} &= \text{Total} - \text{Training} - \text{Portfolio} \label{eq:interaction}
+\end{align}
+
+This decomposition is crucial. If the training effect is zero, our contribution reduces to a portfolio construction insight already addressed by prior literature. If the training effect exceeds the portfolio effect, we demonstrate that \emph{how} models are trained matters at least as much as \emph{how} portfolios are formed.
+
+\subsection{Machine Learning Models}
+\label{subsec:ml_models}
+
+We implement three ML architectures that span the spectrum from boosted trees to deep learning:
+
+\paragraph{XGBoost.} Gradient-boosted decision trees with sample weights entering via gradient weighting. XGBoost builds trees sequentially, with each tree correcting the previous one's residuals. This sequential structure means that weighted training can fundamentally alter the learning path by changing which residuals receive the largest gradients.
+
+\paragraph{Random Forest.} Bagged decision trees with sample weights entering via the impurity criterion. Each tree is trained on a different bootstrap sample with random feature subsets, providing built-in diversification across the feature space.
+
+\paragraph{Neural Network.} A feedforward network with three hidden layers, BatchNormalization, and ReLU activations, trained via the Keras API with sample weights entering through the native \texttt{sample\_weight} mechanism in the weighted MSE loss. We employ learning rate scheduling and early stopping on a validation set.
+
+All three models use the same 75 input features, the same rolling-window protocol, and the same hyperparameter tuning schedule.
+
+\subsection{Training Protocol}
+\label{subsec:training_protocol}
+
+We employ an expanding-then-rolling window protocol:
+\begin{itemize}
+\item \textbf{Training window:} 120 months
+\item \textbf{Validation window:} 12 months
+\item \textbf{Test window:} 1 month (the OOS prediction target)
+\item \textbf{OOS period:} January 2000--December 2024 ($\approx$300 months)
+\item \textbf{Hyperparameter re-tuning:} Every 24 months via grid search on the validation set
+\item \textbf{Rebalancing:} Monthly
+\end{itemize}
+
+\subsection{Portfolio Construction}
+\label{subsec:portfolio_construction}
+
+For each model and each experimental cell, we construct decile-sorted long-short portfolios:
+\begin{enumerate}
+\item Sort stocks into deciles based on predicted returns
+\item Apply a liquidity filter: remove the bottom 40\% of stocks by dollar volume
+\item Form a long-short portfolio: long Q10 (highest predicted return), short Q1
+\item Cap individual positions at 5\% (with iterative redistribution)
+\item Within each decile, weight stocks equally (standard) or by liquidity (liquidity-weighted)
+\end{enumerate}
+
+\subsection{Transaction Cost Model}
+\label{subsec:tc_model}
+
+We estimate transaction costs using the \citet{frazzini2018trading} model:
+\begin{equation}
+\TC_i = \frac{S_i}{2} + \lambda \cdot \sigma_i \cdot \sqrt{\frac{Q_i}{\text{ADV}_i}}
+\label{eq:tc_model}
+\end{equation}
+where $S_i$ is the bid-ask spread (Corwin-Schultz estimate scaled by 0.30 with a 5\% cap), $\lambda = 0.1$ is the market impact coefficient, $\sigma_i$ is daily return volatility, $Q_i$ is the dollar trade size, and $\text{ADV}_i$ is average daily dollar volume. We evaluate net returns at four AUM levels: \$100M, \$500M, \$1B, and \$5B.
+
+\subsection{Statistical Inference}
+\label{subsec:inference}
+
+Sharpe ratio differences are tested using the \citet{ledoit2008robust} studentised circular-block bootstrap with a prewhitened Parzen HAC kernel. Factor alphas are estimated with Newey-West standard errors (6 lags) for CAPM, Fama-French three-factor, and Fama-French five-factor models \citep{fama1993common,fama2015five}. Feature importance differences are tested using paired $t$-tests on mean absolute SHAP values across rolling windows.
+
+
+%% ============================================================
+%% 5. DATA
+%% ============================================================
+\section{Data}
+\label{sec:data}
+
+\subsection{Stock Returns and Characteristics}
+\label{subsec:returns_chars}
+
+Our primary data source is the CRSP monthly stock file, merged with 75 stock-level predictors from the \citet{chen2022open} open-source dataset of signed cross-sectional predictors. We select predictors with continuous coverage from 1972 onward, yielding a balanced panel of characteristics spanning momentum, value, profitability, investment, trading friction, and intangible categories.
+
+The prediction target is one-month-ahead excess returns: $r^e_{i,t+1} = r_{i,t+1} - r^f_t$, where $r^f_t$ is the risk-free rate. All characteristics undergo cross-sectional rank-quantile normalisation to $[-1, 1]$, following \citet{gu2020empirical}. Missing values after normalisation are filled with 0.0, which maps to the median rank---a principled choice that places stocks at the centre of the cross-sectional distribution.
+
+\subsection{Liquidity Measures}
+\label{subsec:liquidity_measures}
+
+Our primary liquidity measure is the 21-day trailing average daily dollar volume:
+\begin{equation}
+\text{DolVol}_{i,t} = \frac{1}{21}\sum_{d=1}^{21} \text{Price}_{i,t-d} \times \text{Volume}_{i,t-d}
+\label{eq:dolvol}
+\end{equation}
+
+We also compute: (i) 6-month rolling average dollar volume; (ii) Frazzini-style price impact $\lambda_{i,t} = 0.2 \times 21 / \text{DolVol}_{i,t}^{6m}$; (iii) Corwin-Schultz bid-ask spread; and (iv) Liu (2006) composite illiquidity measure LM$_{12}$.
+
+
+%% ============================================================
+%% 6. EMPIRICAL RESULTS
+%% ============================================================
+\section{Empirical Results}
+\label{sec:results}
+
+\subsection{Main Results: The $2 \times 2$ Decomposition}
+\label{subsec:main_results}
+
+% Table~\ref{tab:main_results} reports ...
+% \input{TablesNew/MainResults}
+
+% Figure~\ref{fig:cumulative_returns} plots ...
+
+\paragraph{XGBoost.} Liquidity-weighted training produces a statistically significant improvement. The training effect on net Sharpe ratio at \$500M is $+0.242$ (Ledoit-Wolf bootstrap $p=0.033$), exceeding the pre-specified threshold of $\geq 0.20$ in Hypothesis~\ref{hyp:h3}. The training effect accounts for approximately 65\% of the total improvement, consistent with the training dominance hypothesis (H1).
+
+\paragraph{Random Forest.} Weighted training does not help---and slightly hurts---the Random Forest. The baseline gross Sharpe ratio is already strong ($\approx 0.45$), suggesting that RF's bagging architecture provides built-in diversification that makes the additional reallocation from liquidity weighting redundant. The training effect is $-0.12$, indicating that the liquidity weights interfere with RF's natural regularisation.
+
+\paragraph{Neural Network.} \emph{[Results pending re-run with pipeline fixes.]}
+
+\subsection{Mechanism: Feature Reallocation (H2)}
+\label{subsec:h2_results}
+
+Hypothesis~\ref{hyp:h2} predicts that weighted training changes \emph{what} models learn, shifting importance from illiquidity proxies to tradable characteristics. We test this using mean absolute SHAP values computed via TreeExplainer for XGBoost and Random Forest.
+
+% Table~\ref{tab:h2_results} reports ...
+% \input{TablesNew/H2Summary}
+
+% Figure~\ref{fig:importance_comparison} shows ...
+
+For XGBoost, H2 is the strongest result in our analysis. The tradable-to-illiquidity importance ratio increases significantly under weighted training ($t=4.55$, $p<0.001$). Illiquidity-related features (idiosyncratic volatility, zero-trading days, maximum daily return) lose importance, while momentum and profitability factors gain prominence. This is consistent with the capacity reallocation mechanism: weighted training redirects the model's learning capacity from patterns among illiquid stocks toward patterns among tradable stocks.
+
+\subsection{Economic Magnitude (H3)}
+\label{subsec:h3_results}
+
+% Table~\ref{tab:net_results} reports ...
+% \input{TablesNew/NetResults}
+
+For XGBoost at \$500M AUM, the total net Sharpe improvement (cell 2B minus cell 1A) is $+0.242$ with a corrected bootstrap $p$-value of 0.033. This exceeds the pre-specified target of $\geq 0.20$, providing statistically significant evidence for Hypothesis~\ref{hyp:h3}. The improvement is economically meaningful: for a \$500M fund, it corresponds to approximately 120 basis points of additional annual net return.
+
+\subsection{Capacity (H4)}
+\label{subsec:h4_results}
+
+% Figure~\ref{fig:capacity_curve} plots ...
+% Table~\ref{tab:capacity} reports ...
+
+We evaluate portfolio performance across four AUM scenarios (\$100M, \$500M, \$1B, \$5B) and estimate break-even AUM via log-scale interpolation. \emph{[Full capacity results pending Neural Network re-run.]}
+
+\subsection{Why Model Dependence?}
+\label{subsec:model_dependence}
+
+The stark contrast between XGBoost and Random Forest is one of our central findings. We offer the following explanation grounded in the models' architectures:
+
+XGBoost builds trees \emph{sequentially}---each tree corrects the previous one's errors. If early trees focus on illiquidity patterns (which reduce MSE efficiently because illiquid stocks are more predictable), later trees inherit this focus. Weighted training breaks this sequential reinforcement by reducing the gradient signal from illiquid stocks.
+
+Random Forest trains each tree \emph{independently} on a different bootstrap sample with random feature subsets. This ensemble diversity means RF already learns diverse patterns across both liquid and illiquid stocks. It does not over-concentrate capacity on illiquidity patterns the way sequential boosting does. There is less capacity to reallocate, so the reallocation mechanism has less bite.
+
+
+%% ============================================================
+%% 7. ROBUSTNESS
+%% ============================================================
+\section{Additional Results and Robustness}
+\label{sec:robustness}
+
+\subsection{Alternative Weighting Schemes}
+\label{subsec:alt_weights}
+
+We verify that our main results are not sensitive to the specific weighting scheme by repeating the analysis under Schemes B--D (Equations~\ref{eq:linear_dolvol}--\ref{eq:tc_based}). \emph{[Results to be added.]}
+
+\subsection{Factor Alphas}
+\label{subsec:factor_alphas}
+
+% Table~\ref{tab:factor_alphas} reports ...
+% \input{TablesNew/FactorAlphas}
+
+We estimate CAPM, Fama-French three-factor, and Fama-French five-factor alphas for each experimental cell. \emph{[Results to be added.]}
+
+\subsection{Subperiod Analysis}
+\label{subsec:subperiod}
+
+We split the OOS period into pre-crisis (2000--2007), crisis (2008--2009), post-crisis (2010--2019), and recent (2020--2024) subperiods to examine whether the training effect varies with market conditions. \emph{[Results to be added.]}
+
+
+%% ============================================================
+%% 8. CONCLUSION
+%% ============================================================
+\section{Conclusion}
+\label{sec:conclusion}
+
+This paper addresses a fundamental question in empirical asset pricing: why do ML methods that show strong academic results often disappoint in practice? We propose that the answer lies in training objectives that ignore implementation constraints. By developing implementability-weighted training grounded in cost-sensitive learning theory, we aim to align ML optimisation with investor utility.
+
+Our $2\times 2$ empirical design provides clean identification of training versus portfolio formation effects. The central finding is that weighted training's effectiveness is model-dependent. For XGBoost, where sequential boosting concentrates learning on the most predictable (but least tradable) stocks, liquidity-weighted training produces statistically significant improvements in implementable Sharpe ratios. The mechanism operates through feature reallocation away from illiquidity proxies toward tradable characteristics---our most statistically robust result.
+
+For Random Forest, whose bagging architecture already diversifies across feature subsets, the additional reallocation from liquidity weighting is redundant. This finding has practical implications: practitioners should consider model architecture when deciding whether to implement cost-sensitive training modifications.
+
+Our results contribute to the growing literature on making ML methods practically useful for investment management. While prior work has focused on portfolio-level adjustments to mitigate transaction costs \citep{jensen2024machine} or on embedding costs into the pricing kernel \citep{bianchi2026transaction}, we demonstrate that the training stage offers a distinct margin for improvement. The key insight is that \emph{how} models are trained can matter at least as much as \emph{how} portfolios are formed---but only for model architectures that are vulnerable to the implementability imbalance.
+
+
+%% ============================================================
+%% APPENDIX
+%% ============================================================
+\clearpage
+\input{Appendix}
+
+
+%% ============================================================
+%% BIBLIOGRAPHY
+%% ============================================================
+\bibliographystyle{apalike}
+\bibliography{Biblio}
+
+
+\end{document}

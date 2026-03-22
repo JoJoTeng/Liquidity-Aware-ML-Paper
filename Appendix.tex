@@ -1,0 +1,116 @@
+\appendix
+
+\clearpage
+
+\section{ML Model Details}
+\label{app:ml_details}
+
+\subsection{XGBoost}
+\label{app:xgboost}
+
+We use the XGBoost gradient-boosted tree implementation with the following default hyperparameters, subject to re-tuning every 24 months:
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{l l l}
+\midrule
+Parameter & Default & Grid \\
+\midrule
+\texttt{max\_depth} & 4 & \{3, 4, 5, 6\} \\
+\texttt{learning\_rate} & 0.05 & \{0.01, 0.05, 0.10\} \\
+\texttt{n\_estimators} & 300 & \{100, 200, 300, 500\} \\
+\texttt{subsample} & 0.8 & \{0.6, 0.8, 1.0\} \\
+\texttt{colsample\_bytree} & 0.8 & \{0.6, 0.8, 1.0\} \\
+\texttt{reg\_alpha} & 0.1 & \{0.0, 0.1, 1.0\} \\
+\texttt{reg\_lambda} & 1.0 & \{0.1, 1.0, 10.0\} \\
+\midrule
+\end{tabular}
+\caption{\footnotesize \bf XGBoost hyperparameters\normalfont. Default values and grid search ranges. Re-tuning occurs every 24 months using the most recent 12-month validation window.}
+\label{tab:xgb_params}
+\end{table}
+
+Sample weights enter through XGBoost's native gradient weighting mechanism: each observation's contribution to the gradient is scaled by $w_{i,t}$, so that liquid stocks have larger gradients and hence greater influence on the fitted trees.
+
+Early stopping is disabled. In preliminary experiments, we found that early stopping fires too aggressively on noisy return targets, often terminating at iteration 0 or producing near-constant predictions. This is expected behavior: MSE optimisation in low signal-to-noise environments rewards the unconditional mean, and early stopping amplifies this tendency by halting before the model has found cross-sectional patterns.
+
+\subsection{Random Forest}
+\label{app:rf}
+
+We use the scikit-learn \texttt{RandomForestRegressor} with:
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{l l l}
+\midrule
+Parameter & Default & Grid \\
+\midrule
+\texttt{n\_estimators} & 300 & \{100, 200, 300, 500\} \\
+\texttt{max\_depth} & 6 & \{4, 6, 8, None\} \\
+\texttt{max\_features} & 0.33 & \{0.20, 0.33, 0.50\} \\
+\texttt{min\_samples\_leaf} & 50 & \{20, 50, 100\} \\
+\midrule
+\end{tabular}
+\caption{\footnotesize \bf Random Forest hyperparameters\normalfont.}
+\label{tab:rf_params}
+\end{table}
+
+Sample weights enter through the impurity criterion: the variance reduction at each split is computed using weighted observations, so that liquid stocks have greater influence on the split decisions within each tree.
+
+\subsection{Neural Network}
+\label{app:nn}
+
+The neural network architecture consists of three hidden layers with 64, 32, and 16 neurons respectively, BatchNormalization after each hidden layer, ReLU activations, and a linear output layer. Training uses the Adam optimiser with:
+
+\begin{itemize}
+\item Initial learning rate: 0.001 with cosine annealing
+\item Batch size: 4096
+\item Maximum epochs: 100 with early stopping (patience=10) on validation loss
+\item Dropout: 0.10 after each hidden layer
+\end{itemize}
+
+Sample weights enter through Keras's native \texttt{sample\_weight} parameter in the \texttt{fit()} method, which scales the per-observation MSE loss.
+
+SHAP values are computed using DeepExplainer when available; when DeepExplainer fails (e.g., due to incompatible layer types), we fall back to KernelExplainer on a subsample of 500 background observations.
+
+
+\section{Feature List}
+\label{app:features}
+
+Table~\ref{tab:features} lists the 75 stock-level predictors from \citet{chen2022open}, grouped by economic category. We further classify features into ``tradable'' and ``illiquidity'' groups for Hypothesis~\ref{hyp:h2} testing.
+
+% \input{TablesNew/FeatureList}
+
+\paragraph{Illiquidity features (8):} IdioVol3F, IdioVolAHT, zerotrade1M, zerotrade6M, zerotrade12M, MaxRet, VolSD, BetaLiquidityPS.
+
+\paragraph{Tradable features (8):} Mom12m, Mom6m, BMdec, GP, AssetGrowth, RoE, CF, CBOperProf.
+
+
+\section{Ledoit-Wolf Bootstrap}
+\label{app:bootstrap}
+
+We test Sharpe ratio differences using the studentised circular-block bootstrap of \citet{ledoit2008robust}. The procedure is as follows:
+
+\begin{enumerate}
+\item Compute the observed Sharpe ratio difference $\hat{\Delta} = \widehat{\SR}_A - \widehat{\SR}_B$ and its HAC standard error $\hat{\sigma}_{\Delta}$ using a prewhitened Parzen kernel.
+\item Compute the studentised statistic $d = \hat{\Delta} / \hat{\sigma}_{\Delta}$.
+\item Generate $B = 5{,}000$ bootstrap samples using circular blocks of length $b$ (calibrated via Algorithm 3.1 of Ledoit and Wolf, 2008).
+\item For each bootstrap sample $b$, compute $d^*_b = \hat{\Delta}^*_b / \hat{\sigma}^*_{\Delta,b}$.
+\item The one-sided $p$-value is $p = \frac{1}{B}\sum_{b=1}^{B} \Ind\{d^*_b \geq d\}$.
+\end{enumerate}
+
+
+\section{Additional Empirical Results}
+\label{app:additional_results}
+
+% Additional tables and figures not included in the main text.
+% \subsection{Factor Alpha Regressions}
+% \input{TablesNew/FactorAlphas_Full}
+
+% \subsection{OOS $R^2$ by Model and Training}
+% \input{TablesNew/OOSR2}
+
+% \subsection{SHAP Importance Over Time}
+% Figure: importance_over_time_{model}.png
+
+% \subsection{Cumulative Returns Under Alternative AUM}
+% Figure: cumulative_returns_net_{model}.png

@@ -1,0 +1,16 @@
+\begin{table}[t!]
+\centering
+\begin{tabular}{l cc c}
+\midrule
+Quintile & Standard $R^2$ (\%) & Weighted $R^2$ (\%) & $\Delta$ (pp) \\
+\midrule
+Q1 (Illiquid) & $+0.40$ & $+0.28$ & $-0.122$ \\
+Q2            & $+0.19$ & $+0.16$ & $-0.027$ \\
+Q3            & $+0.10$ & $+0.13$ & $\mathbf{+0.029}$ \\
+Q4            & $-0.14$ & $-0.05$ & $\mathbf{+0.091}$ \\
+Q5 (Liquid)   & $-0.23$ & $-0.20$ & $\mathbf{+0.034}$ \\
+\midrule
+\end{tabular}
+\caption{\footnotesize \bf OOS $R^2$ under standard vs.\ weighted training\normalfont. $\Delta$ is the improvement in percentage points. Weighted training uses the softmax rank scheme ($\lambda = 2.0$). Both models are ElasticNet with identical features and rolling-window protocol. Bold entries indicate improvements for implementable quintiles. OOS period: January 2000--December 2024.}
+\label{tab:r2_weighted}
+\end{table}

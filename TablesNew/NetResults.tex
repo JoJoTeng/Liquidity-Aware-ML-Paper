@@ -1,0 +1,23 @@
+\begin{table}[t!]
+\centering
+\resizebox{\textwidth}{!}{
+\begin{tabular}{l cccc cccc cccc cccc}
+\midrule
+& \multicolumn{4}{c}{\$100M} & \multicolumn{4}{c}{\$500M} & \multicolumn{4}{c}{\$1B} & \multicolumn{4}{c}{\$5B} \\
+\cmidrule(lr){2-5} \cmidrule(lr){6-9} \cmidrule(lr){10-13} \cmidrule(lr){14-17}
+Model & 1A & 1B & 2A & 2B & 1A & 1B & 2A & 2B & 1A & 1B & 2A & 2B & 1A & 1B & 2A & 2B \\
+\midrule
+\multicolumn{17}{l}{\it Panel A: Net Sharpe Ratios} \\[4pt]
+XGBoost       & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\
+Random Forest & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\
+Neural Network& 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\[8pt]
+\multicolumn{17}{l}{\it Panel B: Net Training Effect [SR(2A)$-$SR(1A)]} \\[4pt]
+XGBoost       & \multicolumn{4}{c}{0.000} & \multicolumn{4}{c}{0.000} & \multicolumn{4}{c}{0.000} & \multicolumn{4}{c}{0.000} \\
+Random Forest & \multicolumn{4}{c}{0.000} & \multicolumn{4}{c}{0.000} & \multicolumn{4}{c}{0.000} & \multicolumn{4}{c}{0.000} \\
+Neural Network& \multicolumn{4}{c}{0.000} & \multicolumn{4}{c}{0.000} & \multicolumn{4}{c}{0.000} & \multicolumn{4}{c}{0.000} \\
+\midrule
+\end{tabular}
+}
+\caption{\footnotesize \bf Net Sharpe ratios across AUM scenarios\normalfont. Panel~A reports annualised net Sharpe ratios for each experimental cell at four AUM levels. Transaction costs are estimated using the Frazzini et al.\ (2018) model with $\lambda = 0.1$ and Corwin-Schultz spreads scaled by 0.30 (capped at 5\%). Panel~B reports the net training effect at each AUM level. The primary AUM for this paper is \$500M.}
+\label{tab:net_results}
+\end{table}

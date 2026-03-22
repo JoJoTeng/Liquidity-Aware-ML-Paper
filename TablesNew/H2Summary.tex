@@ -1,0 +1,16 @@
+\begin{table}[t!]
+\centering
+\begin{tabular}{l cc cc c}
+\midrule
+& \multicolumn{2}{c}{Tradable Ratio} & & & \\
+\cmidrule(lr){2-3}
+Model & Standard & Weighted & $\Delta$ & $t$-stat & $p$-val \\
+\midrule
+XGBoost        & 0.00 & 0.00 & 0.00 & 0.00 & 0.000 \\
+Random Forest  & 0.00 & 0.00 & 0.00 & 0.00 & 0.000 \\
+Neural Network & 0.00 & 0.00 & 0.00 & 0.00 & 0.000 \\
+\midrule
+\end{tabular}
+\caption{\footnotesize \bf Feature reallocation (H2): Tradable importance ratio\normalfont. The tradable ratio is defined as $\sum |\text{SHAP}|_{\text{tradable}} / (\sum |\text{SHAP}|_{\text{tradable}} + \sum |\text{SHAP}|_{\text{illiquidity}})$, averaged across rolling windows. $\Delta$ is the change from standard to weighted training. The $t$-statistic and $p$-value are from a paired $t$-test across rolling windows. Tradable features: Mom12m, Mom6m, BMdec, GP, AssetGrowth, RoE, CF, CBOperProf. Illiquidity features: IdioVol3F, IdioVolAHT, zerotrade1M/6M/12M, MaxRet, VolSD, BetaLiquidityPS.}
+\label{tab:h2_summary}
+\end{table}
