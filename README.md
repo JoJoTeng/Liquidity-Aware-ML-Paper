@@ -10,7 +10,7 @@ LaTeX project for the paper (Overleaf-compatible).
 ├── preamble.tex          # Math macros and theorem environments
 ├── Biblio.bib            # References (apalike style)
 ├── Slides.tex            # Beamer presentation (Metropolis theme)
-├── FiguresNew/           # Figures from 03_analyze_results.py
+├── FiguresNew/           # Figures from 21_formal_analyze_results.py
 ├── TablesNew/            # Table templates
 │   ├── MainResults.tex
 │   ├── NetResults.tex

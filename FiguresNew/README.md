@@ -1,6 +1,6 @@
 ## Figures Directory
 
-Place output figures from `03_analyze_results.py` here.
+Place output figures from `21_formal_analyze_results.py` here.
 
 ### Expected figures:
 - `cumulative_returns_{model}.png` — 4-cell gross cumulative return overlay
