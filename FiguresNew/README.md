@@ -1,6 +1,6 @@
 ## Figures Directory
 
-Place output figures from `21_formal_analyze_results.py` here.
+Place output figures from the step-level formal analysis scripts (`21a-21e_formal_*.py`) here.
 
 ### Expected figures:
 - `cumulative_returns_{model}.png` — 4-cell gross cumulative return overlay
