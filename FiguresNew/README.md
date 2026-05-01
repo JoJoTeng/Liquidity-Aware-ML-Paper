@@ -2,12 +2,13 @@
 
 Place output figures from the step-level formal analysis scripts (`21a-21e_formal_*.py`) here.
 
-### Expected figures:
-- `cumulative_returns_{model}.png` — 4-cell gross cumulative return overlay
-- `cumulative_returns_net_{model}.png` — 4-cell net cumulative return (primary AUM)
-- `effect_decomposition.png` — Grouped bar: training/portfolio/total effects per model
-- `effect_decomposition_net.png` — Same for net effects
-- `capacity_curve.png` — Net SR vs AUM per cell (H4) with break-even markers
-- `importance_comparison_{model}.png` — Top-20 SHAP bars: standard vs weighted
-- `importance_ratio_{model}.png` — Tradable/(tradable+illiquidity) ratio over time
-- `importance_group_{model}.png` — Group importance time series
+### Expected figures
+
+One of each is produced per `(model, weight_spec)` pair under
+`outputs/formalanalysis/analysis/{model}/{weight_spec}/`:
+
+- `importance_reallocation.png`           — 21b: top-30 SHAP reallocation (M_w − M_std)
+- `restriction_curve_comparison.png`      — 21c: weighted model overlaid on Step 3d hard-restriction curve (Q4–Q5 R²)
+- `liquid_squared_error_differential.png` — 21d: cumulative SE(M_std) − SE(M_w) on Q4–Q5 over time
+
+21a (liquid-stock R² tables) and 21e (portfolio decomposition) produce CSV/JSON only.
